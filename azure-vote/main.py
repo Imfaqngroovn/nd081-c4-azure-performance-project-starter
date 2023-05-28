@@ -19,21 +19,21 @@ from opencensus.ext.flask.flask_middleware import FlaskMiddleware
 
 # Logging
 logger = logging.getLogger(__name__)
-logger.addHandler(AzureLogHandler(connection_string='InstrumentationKey=8535502a-e4ea-4ff3-9c3e-88a2bfa3ab5a'))
-logHandler = AzureLogHandler(connection_string='InstrumentationKey=8535502a-e4ea-4ff3-9c3e-88a2bfa3ab5a')
-eventHandler = AzureEventHandler(connection_string='InstrumentationKey=8535502a-e4ea-4ff3-9c3e-88a2bfa3ab5a')
+logger.addHandler(AzureLogHandler(connection_string='InstrumentationKey=df1c2a99-17cc-483e-8802-a7dde48c0faf'))
+logHandler = AzureLogHandler(connection_string='InstrumentationKey=df1c2a99-17cc-483e-8802-a7dde48c0faf')
+eventHandler = AzureEventHandler(connection_string='InstrumentationKey=df1c2a99-17cc-483e-8802-a7dde48c0faf')
 logger.setLevel(logging.INFO)
 
 # Metrics
-exporter = metrics_exporter.new_metrics_exporter(enable_standard_metrics = True, connection_string = "InstrumentationKey=d5c76086-fe8c-4f4f-8ce2-307398e13edc")
+exporter = metrics_exporter.new_metrics_exporter(enable_standard_metrics = True, connection_string = "InstrumentationKey=df1c2a99-17cc-483e-8802-a7dde48c0faf")
 
 # Tracing
-tracer = Tracer(exporter = AzureExporter(connection_string = "InstrumentationKey=d5c76086-fe8c-4f4f-8ce2-307398e13edc"), sampler = ProbabilitySampler(1.0))
+tracer = Tracer(exporter = AzureExporter(connection_string = "InstrumentationKey=df1c2a99-17cc-483e-8802-a7dde48c0faf"), sampler = ProbabilitySampler(1.0))
 
 app = Flask(__name__)
 
 # Requests
-middleware = FlaskMiddleware(app, exporter = AzureExporter(connection_string = 'InstrumentationKey=8535502a-e4ea-4ff3-9c3e-88a2bfa3ab5a'), sampler = ProbabilitySampler(rate = 1.0))
+middleware = FlaskMiddleware(app, exporter = AzureExporter(connection_string = 'InstrumentationKey=df1c2a99-17cc-483e-8802-a7dde48c0faf'), sampler = ProbabilitySampler(rate = 1.0))
 
 # Load configurations from environment or config file
 app.config.from_pyfile('config_file.cfg')
@@ -72,8 +72,10 @@ def index():
         # Get current values
         vote1 = r.get(button1).decode('utf-8')
         # TODO: use tracer object to trace cat vote
+        tracer.span(name = "Cats Vote")
         vote2 = r.get(button2).decode('utf-8')
         # TODO: use tracer object to trace dog vote
+        tracer.span(name = "Dogs Vote")
 
         # Return index with values
         return render_template("index.html", value1=int(vote1), value2=int(vote2), button1=button1, button2=button2, title=title)
@@ -88,10 +90,12 @@ def index():
             vote1 = r.get(button1).decode('utf-8')
             properties = {'custom_dimensions': {'Cats Vote': vote1}}
             # TODO: use logger object to log cat vote
+            logger.info("Cats Vote", extra = properties)
 
             vote2 = r.get(button2).decode('utf-8')
             properties = {'custom_dimensions': {'Dogs Vote': vote2}}
             # TODO: use logger object to log dog vote
+            logger.info("Dogs Vote", extra = properties)
 
             return render_template("index.html", value1=int(vote1), value2=int(vote2), button1=button1, button2=button2, title=title)
 
@@ -110,6 +114,6 @@ def index():
 
 if __name__ == "__main__":
     # TODO: Use the statement below when running locally
-    app.run() 
+    # app.run() 
     # TODO: Use the statement below before deployment to VMSS
-    # app.run(host='0.0.0.0', threaded=True, debug=True) # remote
+    app.run(host='0.0.0.0', threaded=True, debug=True) # remote
