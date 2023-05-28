@@ -7,22 +7,33 @@ import sys
 import logging
 from datetime import datetime
 
+from opencensus.ext.azure.log_exporter import AzureEventHandler, AzureLogHandler
+from opencensus.ext.azure import metrics_exporter
+from opencensus.trace.tracer import Tracer
+from opencensus.ext.azure.trace_exporter import AzureExporter
+from opencensus.trace.samplers import ProbabilitySampler
+from opencensus.ext.flask.flask_middleware import FlaskMiddleware
+
 # App Insights
 # TODO: Import required libraries for App Insights
 
 # Logging
-logger = # TODO: Setup logger
+logger = logging.getLogger(__name__)
+logger.addHandler(AzureLogHandler(connection_string='InstrumentationKey=8535502a-e4ea-4ff3-9c3e-88a2bfa3ab5a'))
+logHandler = AzureLogHandler(connection_string='InstrumentationKey=8535502a-e4ea-4ff3-9c3e-88a2bfa3ab5a')
+eventHandler = AzureEventHandler(connection_string='InstrumentationKey=8535502a-e4ea-4ff3-9c3e-88a2bfa3ab5a')
+logger.setLevel(logging.INFO)
 
 # Metrics
-exporter = # TODO: Setup exporter
+exporter = metrics_exporter.new_metrics_exporter(enable_standard_metrics = True, connection_string = "InstrumentationKey=d5c76086-fe8c-4f4f-8ce2-307398e13edc")
 
 # Tracing
-tracer = # TODO: Setup tracer
+tracer = Tracer(exporter = AzureExporter(connection_string = "InstrumentationKey=d5c76086-fe8c-4f4f-8ce2-307398e13edc"), sampler = ProbabilitySampler(1.0))
 
 app = Flask(__name__)
 
 # Requests
-middleware = # TODO: Setup flask middleware
+middleware = FlaskMiddleware(app, exporter = AzureExporter(connection_string = 'InstrumentationKey=8535502a-e4ea-4ff3-9c3e-88a2bfa3ab5a'), sampler = ProbabilitySampler(rate = 1.0))
 
 # Load configurations from environment or config file
 app.config.from_pyfile('config_file.cfg')
